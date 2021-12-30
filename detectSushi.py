@@ -1,14 +1,19 @@
 import cv2
 import numpy as np
 from camera import *
-# net = cv2.dnn.readNet(f"models/bang-obj_best.weights", "models/yolov4-obj.cfg")
 
-model_list = ["models/bang-obj_best.weights", "models/jeon.weights", "models/yeolgi-obj_best.weights"]
-class_list = [["bangeo"],["jeon"],["yeolgi"]]
+model_list = ["models/sushi/bang_sushi.weights", "models/sushi/cham_sushi.weights", "models/sushi/daeha.weights",
+  "models/sushi/doldom_sushi.weights","models/sushi/godeong_sushi.weights","models/sushi/gwang_sushi.weights",
+  "models/sushi/jeon_sushi.weights","models/sushi/jeonbok_sushi.weights","models/sushi/squid_sushi.weights",
+  "models/sushi/yeolgi_sushi.weights","models/sushi/yeon_sushi.weights"
+]
+class_list = [["bang_sushi"],["cham_sushi"],["daeha"],["doldom_sushi"],["godeong_sushi"],["gwang_sushi"],["jeon_sushi"],
+  ["jeonbok_sushi"],["squid_sushi"],["yeolgi_sushi"],["yeon_sushi"]]
 img_list = []
-final_result = []
+final_sushi_result = []
+confidence_sushi_list = []
 
-def detectAllModels():
+def detectSushiModels():
   for k in range(len(model_list)):
     net = cv2.dnn.readNet(model_list[k], "models/yolov4-obj.cfg")
     classes = class_list[k]
@@ -22,7 +27,7 @@ def detectAllModels():
     blob = cv2.dnn.blobFromImage(img, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
     net.setInput(blob)
     outs = net.forward(output_layers)
-    print(outs)
+    # print(outs)
     class_ids = []
     confidences = []
     boxes = []
@@ -43,7 +48,7 @@ def detectAllModels():
           # Rectangle coordinates
           x = int(center_x - w / 2)
           y = int(center_y - h / 2)
-          print('confidnece : ', confidence)
+          # print('confidnece : ', confidence)
           
           # final_result에 추가
           # if len(final_result) > 0:
@@ -58,8 +63,9 @@ def detectAllModels():
           # else:
           #   new_result = class_list[k]
           #   final_result.append(new_result)
-          new_result = class_list[k]
-          final_result.append(new_result)
+          # new_result = class_list[k][0]
+          # final_sushi_result.append(new_result)
+          # confidence_sushi_list.append(confidence)
           boxes.append([x, y, w, h])
           confidences.append(float(confidence))
           class_ids.append(class_id)
@@ -70,6 +76,9 @@ def detectAllModels():
       if i in indexes:
         x, y, w, h = boxes[i]
         label = str(classes[class_ids[i]])
+        confidence_sushi_list.append(confidences[i])
+        final_sushi_result.append(label)
+        print(label, ':', confidences[i])
         # print(i, label)
         color = colors[0]
         cv2.rectangle(img, (x, y), (x + w, y + h), color, 2)
@@ -80,8 +89,18 @@ def detectAllModels():
   return img_list
 
 
-def get_final_result():
-  return final_result
-def clear_final_result():
-  final_result.clear()
+def get_final_sushi_result():
+  return final_sushi_result
+def clear_final_sushi_result():
+  final_sushi_result.clear()
   img_list.clear()
+def get_confidence_sushi_list():
+  return confidence_sushi_list
+def clear_confidence_sushi_list():
+  confidence_sushi_list.clear()
+def get_best_sushi():
+  print('현재 회별 확률 : ',confidence_sushi_list)
+  best_confidence = max(confidence_sushi_list)
+  index = confidence_sushi_list.index(best_confidence)
+  print('확률 높은 회 : ', final_sushi_result[index], confidence_sushi_list[index])
+  return final_sushi_result[index], confidence_sushi_list[index]
